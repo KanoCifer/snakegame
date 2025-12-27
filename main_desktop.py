@@ -11,6 +11,67 @@ class Direction:
     LEFT = 2
     RIGHT = 3
 
+class Board:
+    """管理游戏板的类"""
+    def __init__(self, width, height, block_size):
+        self.width = width
+        self.height = height
+        self.block_size = block_size
+        self.highest_score = self.load_highest_score()
+        self.lives_img = pygame.image.load('assets/lives.png').convert_alpha()
+        self.lives_img = pygame.transform.scale(self.lives_img, (24, 24))
+        self.lives = 3 # 初始生命值
+        self.lives_rect = self.lives_img.get_rect()
+        self.lives_rect.center= (700, 10)
+
+    def draw_lives(self, screen):
+        # 绘制剩余生命值
+        for i in range(self.lives):
+            x = self.lives_rect.x + i * (self.lives_rect.width + 5)
+            y = self.lives_rect.y
+            screen.blit(self.lives_img, (x, y))
+
+    def score_display(self, screen, snake):
+        # 显示分数
+        font = pygame.font.Font(None, 36)
+        score_text = font.render(f"Score: {snake.blocks_length - 2}", 
+                                 True, (255, 255, 255))
+        score_rect = score_text.get_rect(center =(self.width // 2, 20))
+        screen.blit(score_text, score_rect)
+    
+    def highest_score_display(self, screen, highest_score):
+        # 显示最高分数
+        font = pygame.font.Font(None, 36)
+        score_text = font.render(f"Highest Score: {highest_score}", 
+                                 True, (255, 255, 255))
+        score_rect = score_text.get_rect(center =(self.width // 2, 60))
+        screen.blit(score_text, score_rect)
+
+    def save_highest_score(self, score):
+        # 保存最高分数到文件
+        try:
+            with open('highest_score.txt', 'r') as f:
+                highest_score = int(f.read())
+        except (FileNotFoundError, ValueError):
+            highest_score = 0
+
+        if score > highest_score:
+            with open('highest_score.txt', 'w') as f:
+                f.write(str(score))
+
+
+    def load_highest_score(self):
+        # 从文件加载最高分数
+        try:
+            with open('highest_score.txt', 'r') as f:
+                highest_score = int(f.read())
+        except (FileNotFoundError, ValueError):
+            highest_score = 0
+        return highest_score
+    
+
+
+
 
 class Snake:
     """管理蛇的类"""
@@ -21,16 +82,16 @@ class Snake:
         self.blocks.append((19, 15))  # 蛇身
         self.blocks.append((20, 15))  # 蛇头
         self.current_direction = Direction.RIGHT
-        self.right_image = pygame.image.load('assets/right_1.png')
-        self.left_image = pygame.image.load('assets/left_1.png')
-        self.up_image = pygame.image.load('assets/up_1.png')
-        self.down_image = pygame.image.load('assets/down_1.png')
-        self.body_image = pygame.image.load('assets/body.png')
+        self.right_image = pygame.image.load('assets/right_1.png').convert_alpha()
+        self.left_image = pygame.image.load('assets/left_1.png').convert_alpha()
+        self.up_image = pygame.image.load('assets/up_1.png').convert_alpha()
+        self.down_image = pygame.image.load('assets/down_1.png').convert_alpha()
+        self.body_image = pygame.image.load('assets/body.png').convert_alpha()
         # 动画图片
-        self.right_image_2 = pygame.image.load('assets/right_2.png')
-        self.left_image_2 = pygame.image.load('assets/left_2.png')
-        self.up_image_2 = pygame.image.load('assets/up_2.png')
-        self.down_image_2 = pygame.image.load('assets/down_2.png')
+        self.right_image_2 = pygame.image.load('assets/right_2.png').convert_alpha()
+        self.left_image_2 = pygame.image.load('assets/left_2.png').convert_alpha()
+        self.up_image_2 = pygame.image.load('assets/up_2.png').convert_alpha()
+        self.down_image_2 = pygame.image.load('assets/down_2.png').convert_alpha()
         self.current_head_image = self.right_image
         self.animation_frame = 10  # 每隔多少帧切换一次图片
         self.current_frame = 0
@@ -84,7 +145,7 @@ class Berry:
 
     def __init__(self, block_size, x, y):
         self.block_size = block_size
-        self.image = pygame.image.load('assets/berry.png')
+        self.image = pygame.image.load('assets/berry.png').convert_alpha()
         self.position = (x, y)
 
     def draw(self, surface):
@@ -95,6 +156,7 @@ class Berry:
 
 
 class Button:
+    """按钮类，用于创建可点击的按钮"""
     def __init__(self, x, y, width, height, text, font_size=32,
                  text_color=(255, 255, 255), color=(0, 160, 0), hover_color=(0, 190, 0)):
         self.rect = pygame.Rect(x, y, width, height)
@@ -120,23 +182,28 @@ class Game:
     """管理游戏的类"""
     def __init__(self):
         pygame.init()
-        self.snake = Snake(block_size=16)
-        self.berry = Berry(block_size=16, x=10, y=10)  # 食物对象
-        self.clock = pygame.time.Clock()
-        # 设置屏幕尺寸
+        # 先创建渲染窗口，再加载依赖 convert_alpha 的贴图
         self.block_size = 16
         self.bg_color = (0, 0, 0)
-        screen_width = self.block_size * 50
-        screen_height = self.block_size * 50
-        self.screen = pygame.display.set_mode((screen_width, screen_height))
+        self.screen_width = self.block_size * 50
+        self.screen_height = self.block_size * 50
+        self.screen = pygame.display.set_mode((self.screen_width, self.screen_height))
         pygame.display.set_caption("SNAKE贪吃蛇游戏")
+
+        self.snake = Snake(block_size=16)
+        self.berry = Berry(block_size=16, x=10, y=10)  # 食物对象
+        self.board = Board(self.screen_width, self.screen_height, self.block_size)
+        self.clock = pygame.time.Clock()
 
         # 初始化其他游戏元素，如食物、音乐等
         self.turn = pygame.mixer.Sound('assets/step.wav')
         self.hit = pygame.mixer.Sound('assets/hit.wav')
         self.point = pygame.mixer.Sound('assets/point.wav')
+        self.game_bg_music = pygame.mixer.Sound('assets/game_bgm.mp3')
+        self.game_bg_music.set_volume(0.3)
 
-        self.wall_image = pygame.image.load('assets/wall.png')
+
+        self.wall_image = pygame.image.load('assets/wall.png').convert_alpha()
         self.logic_fps = 10
         self.fps = 60
         # 将渲染帧率与逻辑帧率解耦：渲染 60 FPS，逻辑 10 FPS
@@ -145,9 +212,10 @@ class Game:
 
         self.game_active = False  # 游戏是否进行中的标志
         self.active = True
+        self.music_playing = False
 
         # 创建开始按钮
-        self.play_button = Button(x=screen_width//2 - 50, y=screen_height//2 
+        self.play_button = Button(x=self.screen_width//2 - 50, y=self.screen_height//2 
                                   - 25, width=100, height=50, text="PLAY", font_size=40)
 
 
@@ -165,11 +233,7 @@ class Game:
             elif event.type == pygame.KEYDOWN:
                 # 空格键：在未开始时启动游戏
                 if event.key == K_SPACE and not self.game_active:
-                    self.game_active = True
-                    # 重置游戏状态
-                    self.snake = Snake(block_size=16)
-                    self.berry = Berry(block_size=16, x=10, y=10)
-                    self.last_logic_time = pygame.time.get_ticks()
+                    self._start_game()
                 elif event.key == K_ESCAPE:
                     # ESC：退出游戏
                     pygame.quit()
@@ -195,11 +259,36 @@ class Game:
     def _check_play_button(self, mouse_pos):
         button_clicked = self.play_button.is_hovered(mouse_pos)
         if button_clicked and not self.game_active:
-            self.game_active = True
-            # 重置游戏状态
-            self.snake = Snake(block_size=16)
-            self.berry = Berry(block_size=16, x=10, y=10)
-            self.last_logic_time = pygame.time.get_ticks()
+            self._start_game()
+
+    def _start_game(self):
+        # 重置游戏状态并启动背景音乐
+        self.game_active = True
+        self.snake = Snake(block_size=16)
+        self.berry = Berry(block_size=16, x=10, y=10)
+        self.last_logic_time = pygame.time.get_ticks()
+        self._play_music_once()
+    
+    def _current_score(self):
+        # 当前得分（蛇身长度减去初始两节）
+        return max(self.snake.blocks_length - 2, 0)
+    
+    def _update_high_score(self):
+        score = self._current_score()
+        if score > self.board.highest_score:
+            self.board.highest_score = score
+            self.board.save_highest_score(score)
+
+    def _play_music_once(self):
+        if not self.music_playing: # 仅当音乐未播放时启动
+            channel = self.game_bg_music.play(-1, fade_ms=500) # 循环播放背景音乐
+            if channel is not None: # 播放成功
+                self.music_playing = True
+
+    def _stop_music(self):
+        if self.music_playing:
+            self.game_bg_music.stop()
+            self.music_playing = False
 
     def draw(self):
         # 绘制游戏元素
@@ -216,24 +305,29 @@ class Game:
             self.screen.blit(self.wall_image, (self.screen.get_width() - self.block_size, y))
 
     def check_collisions(self):
-        # 检查碰撞逻辑
-        # 碰撞检测：撞到围墙即结束
         head = self.snake.blocks[-1]
+
+        # 撞墙：游戏结束，更新最高分
         if head[0] <= 0 or head[0] >= (self.screen.get_width() // self.block_size) - 1 or \
               head[1] <= 0 or head[1] >= (self.screen.get_height() // self.block_size) - 1:
-            game_over_message = "Game Over! You hit the wall."
-            print(game_over_message)
-            self.game_active = False
-            # 碰撞检测：撞到自己即结束
-        if head in self.snake.blocks[:-1]:
-            print("Game Over! You ran into yourself.")
+            self._update_high_score()
             self.game_active = False
             self.hit.play()
-        # 碰撞检测：吃到食物
+            self._stop_music()
+            return
+
+        # 撞到自己：游戏结束，更新最高分
+        if head in self.snake.blocks[:-1]:
+            self._update_high_score()
+            self.game_active = False
+            self.hit.play()
+            self._stop_music()
+            return
+
+        # 吃到食物：加长并重新生成
         if head == self.berry.position:
-            self.snake.blocks_length += 1 # 增加蛇的长度
-            self.point.play() # 播放得分音效
-            # 重新生成食物位置
+            self.snake.blocks_length += 1
+            self.point.play()
             while True:
                 new_x = random.randint(2, (self.screen.get_width() // self.block_size) - 2)
                 new_y = random.randint(2, (self.screen.get_height() // self.block_size) - 2)
@@ -242,16 +336,29 @@ class Game:
                     break
 
 
+    def score_display(self):
+        font = pygame.font.Font(None, 32)
+        score = self._current_score()
+        score_text = font.render(f"Score: {score}", True, (255, 255, 255))
+        high_text = font.render(f"High: {self.board.highest_score}", True, (255, 215, 0))
+        self.screen.blit(score_text, (10, 10))
+        self.screen.blit(high_text, (10, 42))
+
 
     def main_loop(self):
+        # 主游戏循环
         while self.active:
+            # 游戏未开始时显示开始按钮
             if not self.game_active:
                 self.screen.fill(self.bg_color)
                 self.play_button.draw(self.screen)
                 self.check_events()
                 self.draw_walls()
-                pygame.display.flip()
+                self.score_display()
+                self._stop_music()
+                pygame.display.update()
             else:
+                # 游戏进行中
                 self.check_events()
                 current_time = pygame.time.get_ticks()
                 elapsed = current_time - self.last_logic_time
@@ -259,13 +366,18 @@ class Game:
                 while elapsed >= self.logic_interval_ms:
                     self.snake.move()
                     self.check_collisions()
+                    # 更新最后逻辑时间
                     self.last_logic_time += self.logic_interval_ms
                     elapsed -= self.logic_interval_ms
 
                 self.screen.fill(self.bg_color)  # 清屏
+
+                self._play_music_once()
                 self.draw_walls()
+                self.score_display()
+                self.board.draw_lives(self.screen)
                 self.draw()
-                pygame.display.flip()
+                pygame.display.update()
                 self.clock.tick(self.fps)
 
 if __name__ == "__main__":
