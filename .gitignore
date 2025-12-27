@@ -6,4 +6,5 @@
 .vscode/
 .idea/
 node_modules/
-*.log
+*.log.DS_Store
+__pycache__/
