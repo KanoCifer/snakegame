@@ -92,6 +92,21 @@ pygbag main.py
 
 ## 📸 游戏截图
 
+<p align="center">
+  <img src="screenshot/Screenshot%202025-12-27%20at%2021.06.15.png" alt="游戏开始界面" width="400">
+  <img src="screenshot/Screenshot%202025-12-27%20at%2021.07.13.png" alt="游戏进行中" width="400">
+</p>
+
+## 🎨 游戏素材
+
+| 蛇头（右） | 蛇头（左） | 蛇头（上） | 蛇头（下） |
+|:----------:|:----------:|:----------:|:----------:|
+| <img src="assets/right_1.png" width="32"> <img src="assets/right_2.png" width="32"> | <img src="assets/left_1.png" width="32"> <img src="assets/left_2.png" width="32"> | <img src="assets/up_1.png" width="32"> <img src="assets/up_2.png" width="32"> | <img src="assets/down_1.png" width="32"> <img src="assets/down_2.png" width="32"> |
+
+| 蛇身 | 食物 | 墙壁 | 生命值 |
+|:----:|:----:|:----:|:------:|
+| <img src="assets/body.png" width="32"> | <img src="assets/berry.png" width="32"> | <img src="assets/wall.png" width="32"> | <img src="assets/lives.png" width="32"> |
+
 *游戏界面展示*
 
 ## 🛠️ 技术栈
@@ -99,6 +114,11 @@ pygbag main.py
 - **Python** - 编程语言
 - **Pygame** - 游戏开发库
 - **pygbag** - Web 端打包工具
+
+## 🛠️ 待完善
+
+1. 地图编辑器
+2. ...
 
 ## 📝 License
 
