@@ -20,6 +20,7 @@ A classic Snake game developed with Python + Pygame, supporting both desktop and
 - 🏆 High score saving
 - ❤️ Lives system
 - 🌐 Web support (via pygbag)
+- 🗺️ **Map Editor** - Create custom maps
 
 ### 📁 Project Structure
 
@@ -27,6 +28,8 @@ A classic Snake game developed with Python + Pygame, supporting both desktop and
 snake/
 ├── main.py              # Web entry (pygbag support)
 ├── main_desktop.py      # Desktop entry
+├── mapeditor.py         # Map editor tool
+├── map.json             # Map data file
 ├── highest_score.txt    # High score save file
 ├── assets/              # Game assets
 │   ├── berry.png        # Food sprite
@@ -120,10 +123,41 @@ pygbag main.py
 - **Pygame** - Game Development Library
 - **pygbag** - Web Packaging Tool
 
+### �️ Map Editor
+
+Create custom maps with the built-in map editor:
+
+```bash
+python mapeditor.py
+```
+
+| Key | Action |
+|-----|--------|
+| Left Click | Place wall |
+| Right Click | Remove wall |
+| S | Save map |
+| C | Clear all walls |
+| ESC | Quit editor |
+
+Maps are saved to `map.json` and will be loaded automatically when you start the game.
+
+### 📝 Changelog
+
+#### v1.1.0 (2025-12-28)
+- ✨ Added Map Editor - Create and edit custom maps
+- 🐛 Fixed high score not saving immediately
+- 🐛 Fixed high score not updating in real-time
+- 🐛 Improved collision pause (non-blocking, 1 second pause after collision)
+
+#### v1.0.0
+- 🎉 Initial release
+
 ### 🛠️ TODO
 
-1. Map Editor
-2. ...
+1. ~~Map Editor~~ ✅
+2. Multiple map selection
+3. Difficulty levels
+4. ...
 
 ---
 
@@ -143,6 +177,7 @@ pygbag main.py
 - 🏆 最高分记录保存
 - ❤️ 生命值系统
 - 🌐 支持 Web 端运行（pygbag）
+- 🗺️ **地图编辑器** - 创建自定义地图
 
 ### 📁 项目结构
 
@@ -150,6 +185,8 @@ pygbag main.py
 snake/
 ├── main.py              # Web 端入口（支持 pygbag）
 ├── main_desktop.py      # 桌面端入口
+├── mapeditor.py         # 地图编辑器
+├── map.json             # 地图数据文件
 ├── highest_score.txt    # 最高分存档
 ├── assets/              # 游戏资源
 │   ├── berry.png        # 食物贴图
@@ -243,10 +280,41 @@ pygbag main.py
 - **Pygame** - 游戏开发库
 - **pygbag** - Web 端打包工具
 
+### �️ 地图编辑器
+
+使用内置的地图编辑器创建自定义地图：
+
+```bash
+python mapeditor.py
+```
+
+| 按键 | 功能 |
+|------|------|
+| 鼠标左键 | 放置墙壁 |
+| 鼠标右键 | 删除墙壁 |
+| S | 保存地图 |
+| C | 清除所有墙壁 |
+| ESC | 退出编辑器 |
+
+地图保存到 `map.json`，启动游戏时会自动加载。
+
+### 📝 更新日志
+
+#### v1.1.0 (2025-12-28)
+- ✨ 新增地图编辑器 - 可创建和编辑自定义地图
+- 🐛 修复最高分未即时保存的问题
+- 🐛 修复最高分未实时更新显示的问题
+- 🐛 改进碰撞暂停机制（非阻塞式，碰撞后暂停1秒）
+
+#### v1.0.0
+- 🎉 初始版本发布
+
 ### 🛠️ 待完善
 
-1. 地图编辑器
-2. ...
+1. ~~地图编辑器~~ ✅
+2. 多地图选择
+3. 难度等级
+4. ...
 
 ---
 

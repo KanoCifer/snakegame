@@ -1,7 +1,10 @@
+from math import e
 import pygame
 import sys
 from pygame.locals import QUIT, K_w, K_s, K_a, K_d, K_ESCAPE, K_SPACE
 import random
+import json
+import time
 
 
 class Direction:
@@ -20,13 +23,12 @@ class Board:
         self.highest_score = self.load_highest_score()
         self.lives_img = pygame.image.load('assets/lives.png').convert_alpha()
         self.lives_img = pygame.transform.scale(self.lives_img, (24, 24))
-        self.lives = 3 # 初始生命值
         self.lives_rect = self.lives_img.get_rect()
         self.lives_rect.center= (700, 10)
 
-    def draw_lives(self, screen):
-        # 绘制剩余生命值
-        for i in range(self.lives):
+    def draw_lives(self, screen, lives):
+        # 绘制剩余生命值，从外部传入生命值
+        for i in range(lives):
             x = self.lives_rect.x + i * (self.lives_rect.width + 5)
             y = self.lives_rect.y
             screen.blit(self.lives_img, (x, y))
@@ -188,12 +190,20 @@ class Game:
         self.screen_width = self.block_size * 50
         self.screen_height = self.block_size * 50
         self.screen = pygame.display.set_mode((self.screen_width, self.screen_height))
+
+        self.map_data = []
         pygame.display.set_caption("SNAKE贪吃蛇游戏")
+
+        # 加载地图数据
+        self.load_map('map.json')
 
         self.snake = Snake(block_size=16)
         self.berry = Berry(block_size=16, x=10, y=10)  # 食物对象
         self.board = Board(self.screen_width, self.screen_height, self.block_size)
         self.clock = pygame.time.Clock()
+
+        # 初始化生命值
+        self.lives = 3
 
         # 初始化其他游戏元素，如食物、音乐等
         self.turn = pygame.mixer.Sound('assets/step.wav')
@@ -204,6 +214,7 @@ class Game:
 
 
         self.wall_image = pygame.image.load('assets/wall.png').convert_alpha()
+        self.wall_rect = self.wall_image.get_rect()
         self.logic_fps = 10
         self.fps = 60
         # 将渲染帧率与逻辑帧率解耦：渲染 60 FPS，逻辑 10 FPS
@@ -213,6 +224,11 @@ class Game:
         self.game_active = False  # 游戏是否进行中的标志
         self.active = True
         self.music_playing = False
+        
+        # 碰撞暂停相关
+        self.collision_pause = False  # 是否处于碰撞暂停状态
+        self.collision_pause_start = 0  # 碰撞暂停开始时间
+        self.collision_pause_duration = 1000  # 暂停持续时间（毫秒）
 
         # 创建开始按钮
         self.play_button = Button(x=self.screen_width//2 - 50, y=self.screen_height//2 
@@ -269,6 +285,14 @@ class Game:
         self.last_logic_time = pygame.time.get_ticks()
         self._play_music_once()
     
+    def _reset_game(self):
+        # 完全重置游戏状态，包括生命值
+        self.game_active = False
+        self.lives = 3
+        self.snake = Snake(block_size=16)
+        self.berry = Berry(block_size=16, x=10, y=10)
+        self._stop_music()
+    
     def _current_score(self):
         # 当前得分（蛇身长度减去初始两节）
         return max(self.snake.blocks_length - 2, 0)
@@ -295,45 +319,82 @@ class Game:
         self.snake.draw(self.screen)
         self.berry.draw(self.screen)
 
-    def draw_walls(self):
-        # 绘制墙壁
-        for x in range(0, self.screen.get_width(), self.block_size):
-            self.screen.blit(self.wall_image, (x, 0))
-            self.screen.blit(self.wall_image, (x, self.screen.get_height() - self.block_size))
-        for y in range(0, self.screen.get_height(), self.block_size):
-            self.screen.blit(self.wall_image, (0, y))
-            self.screen.blit(self.wall_image, (self.screen.get_width() - self.block_size, y))
+    def load_map(self, filename):
+        """
+        从文件中加载地图数据。
+        """
+        try:
+            with open(filename, "r") as f:
+                self.map_data = json.load(f)
+        except Exception as e:
+            print(f"加载地图失败: {e}")
+
+    def draw_map(self):
+        """
+        绘制地图，将地图数据渲染到屏幕上。
+        """
+        # 检查地图数据是否已加载
+        if not self.map_data:
+            print("警告：地图数据未加载")
+            return
+            
+        for row in range(50):
+            for col in range(50):
+                if self.map_data[row][col] == 1:
+                    self.wall_rect.topleft = (col * self.block_size, row * self.block_size)
+                    self.screen.blit(self.wall_image, self.wall_rect)
 
     def check_collisions(self):
         head = self.snake.blocks[-1]
 
-        # 撞墙：游戏结束，更新最高分
-        if head[0] <= 0 or head[0] >= (self.screen.get_width() // self.block_size) - 1 or \
-              head[1] <= 0 or head[1] >= (self.screen.get_height() // self.block_size) - 1:
-            self._update_high_score()
-            self.game_active = False
-            self.hit.play()
-            self._stop_music()
+        # 撞墙：减少生命值
+        if self.map_data[head[1]][head[0]] == 1:
+            self._handle_collision()
             return
 
-        # 撞到自己：游戏结束，更新最高分
+        # 撞到自己：减少生命值
         if head in self.snake.blocks[:-1]:
-            self._update_high_score()
-            self.game_active = False
-            self.hit.play()
-            self._stop_music()
+            self._handle_collision()
             return
 
-        # 吃到食物：加长并重新生成
+        # 吃到食物：加长并重新生成食物, 确保新位置不在蛇身或墙内
         if head == self.berry.position:
             self.snake.blocks_length += 1
             self.point.play()
+            # 即时更新最高分
+            self._update_high_score()
             while True:
                 new_x = random.randint(2, (self.screen.get_width() // self.block_size) - 2)
                 new_y = random.randint(2, (self.screen.get_height() // self.block_size) - 2)
-                if (new_x, new_y) not in self.snake.blocks:
-                    self.berry.position = (new_x, new_y)
-                    break
+                if (new_x, new_y) not in self.snake.blocks and self.map_data[new_y][new_x] == 0:
+                        self.berry.position = (new_x, new_y)
+                        break
+                else:
+                    continue
+
+    def _handle_collision(self):
+        """处理碰撞事件，开始暂停计时"""
+        # 碰撞前先保存最高分（因为之后蛇会被重置）
+        self._update_high_score()
+        self.lives -= 1
+        self.hit.play()
+        self.collision_pause = True
+        self.collision_pause_start = pygame.time.get_ticks()
+    
+    def _finish_collision_pause(self):
+        """暂停结束后的处理"""
+        self.collision_pause = False
+        
+        # 如果生命值耗尽，游戏结束
+        if self.lives <= 0:
+            self._update_high_score()
+            self.game_active = False
+            self._reset_game()
+        else:
+            # 如果还有生命值，重置蛇的位置但继续游戏
+            self.snake = Snake(block_size=16)
+            self.berry = Berry(block_size=16, x=10, y=10)
+            self.last_logic_time = pygame.time.get_ticks()
 
 
     def score_display(self):
@@ -353,29 +414,38 @@ class Game:
                 self.screen.fill(self.bg_color)
                 self.play_button.draw(self.screen)
                 self.check_events()
-                self.draw_walls()
+                self.draw_map()
                 self.score_display()
+                self.board.draw_lives(self.screen, self.lives)  # 传入生命值
                 self._stop_music()
                 pygame.display.update()
             else:
                 # 游戏进行中
                 self.check_events()
                 current_time = pygame.time.get_ticks()
-                elapsed = current_time - self.last_logic_time
-                # 逻辑更新按固定间隔执行，可累积处理落后的逻辑帧
-                while elapsed >= self.logic_interval_ms:
-                    self.snake.move()
-                    self.check_collisions()
-                    # 更新最后逻辑时间
-                    self.last_logic_time += self.logic_interval_ms
-                    elapsed -= self.logic_interval_ms
+                
+                # 检查是否处于碰撞暂停状态
+                if self.collision_pause:
+                    # 暂停期间仍然渲染画面，但不更新游戏逻辑
+                    if current_time - self.collision_pause_start >= self.collision_pause_duration:
+                        self._finish_collision_pause()
+                else:
+                    # 正常游戏逻辑
+                    elapsed = current_time - self.last_logic_time
+                    # 逻辑更新按固定间隔执行，可累积处理落后的逻辑帧
+                    while elapsed >= self.logic_interval_ms:
+                        self.snake.move()
+                        self.check_collisions()
+                        # 更新最后逻辑时间
+                        self.last_logic_time += self.logic_interval_ms
+                        elapsed -= self.logic_interval_ms
 
                 self.screen.fill(self.bg_color)  # 清屏
 
                 self._play_music_once()
-                self.draw_walls()
+                self.draw_map()
                 self.score_display()
-                self.board.draw_lives(self.screen)
+                self.board.draw_lives(self.screen, self.lives)  # 传入生命值
                 self.draw()
                 pygame.display.update()
                 self.clock.tick(self.fps)
