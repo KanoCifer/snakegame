@@ -14,6 +14,7 @@ class MapEditor:
         self.load_map()
         screen_width = 800
         screen_height = 800
+        self.GRID_COLOR = (100, 100, 100)
         self.block_size = 16
         self.screen = pygame.display.set_mode((screen_width, screen_height))
         self.wall_img = pygame.image.load("assets/wall.png").convert_alpha()
@@ -57,13 +58,14 @@ class MapEditor:
             self.map_data[row][col] = 1 # 将点击位置的地图数据设置为1，即添加墙壁 
             self.save_map() # 保存地图数据
     
+    
     def add_grid(self):
         """
         绘制网格，用于辅助用户绘制地图。
         """
         for i in range(50):
-            pygame.draw.line(self.screen, (120, 120, 120), (0, i * self.block_size), (800, i * self.block_size))
-            pygame.draw.line(self.screen, (120, 120, 120), (i * self.block_size, 0), (i * self.block_size, 800))
+            pygame.draw.line(self.screen, self.GRID_COLOR, (0, i * self.block_size), (800, i * self.block_size))
+            pygame.draw.line(self.screen, self.GRID_COLOR, (i * self.block_size, 0), (i * self.block_size, 800))
     
     def draw_bound_wall(self):
         """
@@ -108,9 +110,6 @@ class MapEditor:
             print(f"保存失败: {e}")
 
     def load_map(self):
-        """
-        从文件中加载地图数据。
-        """
         """
         从文件中加载地图数据。
         """
