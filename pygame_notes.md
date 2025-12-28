@@ -502,6 +502,38 @@ blocks.draw(screen)  # 批量绘制
 - 只需要简单碰撞/定位且对象很少 → 用 `Rect` 即可。
 - 需要批量绘制、统一更新、分层管理或大量对象 → 用 `Sprite` + `Group`。
 
+#### 额外示例：分层渲染与碰撞
+
+```python
+# 分层：背景、墙体、玩家/食物/敌人
+background = pygame.sprite.Group()
+walls = pygame.sprite.Group()
+actors = pygame.sprite.Group()  # 玩家、食物、敌人等
+
+# 绘制顺序：先背景，再墙，再动态对象
+background.draw(screen)
+walls.draw(screen)
+actors.draw(screen)
+
+# 碰撞示例：玩家 vs 食物（吃掉）
+hits = pygame.sprite.spritecollide(player, food_group, dokill=True)
+for food in hits:
+    player.score += 1
+    # 生成新食物或其他效果
+
+# 碰撞示例：玩家 vs 墙（阻挡，不删除墙）
+if pygame.sprite.spritecollide(player, walls, dokill=False):
+    # 简单处理：回退上一步位置
+    player.rect.topleft = player.prev_pos
+
+# 碰撞示例：组与组（子弹 vs 敌人）
+collisions = pygame.sprite.groupcollide(bullets, enemies, dokilla=True, dokillb=True)
+if collisions:
+    # collisions 是 {bullet: [enemy, enemy...]} 的映射
+    for bullet, enemy_list in collisions.items():
+        player.score += len(enemy_list)
+```
+
 ## 11. Map Editor 使用笔记
 
 基于 `mapeditor.py` 的 50×50 网格地图编辑器，方块大小 16px，保存到 `map.json`。
