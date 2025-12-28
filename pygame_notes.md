@@ -360,3 +360,179 @@ sys.exit()
 ---
 
 *整理自贪吃蛇项目 main_desktop.py*
+
+## 10. Sprites（精灵）
+
+Pygame 的 `sprite` 模块提供了对游戏对象的组织、更新和批量绘制的便利工具，适合管理角色、子弹、粒子、地块等。
+
+### 常用类
+
+- `pygame.sprite.Sprite`：基础类，继承后实现 `image`（Surface）和 `rect`（Rect）属性，并可实现 `update()` 方法。
+- `pygame.sprite.Group`：管理一组精灵，支持统一 `update()`、`draw(surface)` 与碰撞查询。
+
+### 基本用法（精灵类示例）
+
+```python
+import pygame
+
+class MySprite(pygame.sprite.Sprite):
+    def __init__(self, image, x, y):
+        super().__init__()
+        self.image = image  # Surface
+        self.rect = self.image.get_rect(topleft=(x, y))
+
+    def update(self, dt):
+        # 根据 delta time 更新位置或动画
+        self.rect.x += 100 * dt  # 每秒 100 px
+
+# 创建组并使用
+sprite_group = pygame.sprite.Group()
+player = MySprite(pygame.image.load('assets/body.png').convert_alpha(), 100, 100)
+sprite_group.add(player)
+
+# 在主循环中
+# dt = clock.tick(60) / 1000.0  # 秒为单位
+# sprite_group.update(dt)
+# sprite_group.draw(screen)
+```
+
+### 批量绘制与更新
+
+使用 `Group.update()` 会调用组内每个精灵的 `update()`。
+`Group.draw(surface)` 会把每个精灵的 `image` 按各自的 `rect` 绘制到目标 Surface 上（注意：精灵必须有 `image` 和 `rect` 属性）。
+
+### 碰撞检测（与精灵组）
+
+常用函数：
+- `pygame.sprite.spritecollide(sprite, group, dokill, collided=None)`：检测单个精灵与组的碰撞。
+- `pygame.sprite.groupcollide(groupa, groupb, dokilla, dokillb, collided=None)`：检测两个组之间的碰撞，返回碰撞映射。
+
+示例（检测玩家与食物碰撞）：
+
+```python
+hits = pygame.sprite.spritecollide(player, food_group, dokill=True)
+if hits:
+    # 每次碰撞会把命中的食物从 food_group 中移除（dokill=True）
+    player.grow()
+```
+
+### 动画精灵（多帧切换）
+
+可以把多帧图片存在列表中，在 `update()` 中按帧或时间切换 `self.image`：
+
+```python
+class AnimatedSprite(pygame.sprite.Sprite):
+    def __init__(self, frames, x, y, frame_time=100):
+        super().__init__()
+        self.frames = frames  # Surface 列表
+        self.frame_time = frame_time  # 每帧持续毫秒
+        self.current = 0
+        self.image = self.frames[self.current]
+        self.rect = self.image.get_rect(topleft=(x, y))
+        self.last_update = pygame.time.get_ticks()
+
+    def update(self, dt=None):
+        now = pygame.time.get_ticks()
+        if now - self.last_update >= self.frame_time:
+            self.last_update = now
+            self.current = (self.current + 1) % len(self.frames)
+            self.image = self.frames[self.current]
+```
+
+### 在 `main_desktop.py` 中集成建议
+
+- 将游戏对象（玩家、食物、墙等）封装为 `Sprite`，把可移动对象放入 `moving_group`，不可移动的放 `static_group`（用于渲染或碰撞查询）。
+- 使用 `sprite_group.update()` 替代在多个地方手动更新对象状态。
+- 在暂停或碰撞等待时仍然可以调用 `group.draw(screen)` 来渲染当前帧。
+
+### 小贴士
+
+- `Group.draw()` 直接使用每个精灵的 `image` 和 `rect`，不要在 `draw()` 之外修改它们的类型。
+- 若需更复杂的碰撞检测（像素级），可传入自定义 `collided` 函数给 `spritecollide`/`groupcollide`。
+- 对于大量精灵，使用多个 `Group`（按用途分组）有助于优化更新和碰撞查询。
+
+### Sprite 与普通 Rect 的区别
+
+- 关注点：`Rect` 只存储位置尺寸并提供几何运算；`Sprite` 关注“对象”，需要 `image` + `rect`，可加入组、统一更新/绘制。
+- 渲染：`Rect` 本身不绘制，需手动 `draw.rect` 或 `blit`；`Sprite` 通过 `Group.draw(surface)` 用 `image`+`rect` 自动批量绘制。
+- 更新：`Rect` 没有生命周期方法；`Sprite` 可自定义 `update()`，`Group.update()` 会统一调用。
+- 组织管理：`Sprite` 可被多个 `Group` 管理，便于批量碰撞、批量隐藏/显示；`Rect` 只是数据，需自己管理集合。
+- 碰撞：`Rect` 提供 `colliderect`/`collidepoint` 等几何检测；`Sprite` 依然用 `rect` 做检测，但可直接用 `spritecollide`、`groupcollide` 针对组批量检测。
+
+| 对比项 | Rect | Sprite + Group |
+|--------|------|----------------|
+| 数据 | 位置/尺寸 | image + rect + 其它状态 |
+| 绘制 | 需手写 `draw.rect`/`blit` | `group.draw(surface)` 自动批量绘制 |
+| 更新 | 无生命周期 | `update()` + `group.update()` 统一调用 |
+| 组织 | 手工维护列表 | 可加入/移出多个 Group，便于分层分批 |
+| 碰撞 | `colliderect` 等 | `spritecollide` / `groupcollide` 批量检测 |
+
+#### 实战对比示例
+
+- 只用 Rect（手动更新+绘制）：
+
+```python
+rects = [pygame.Rect(100, 100, 32, 32)]
+
+for r in rects:
+    r.x += 2  # 手动更新
+    pygame.draw.rect(screen, (0, 200, 0), r)  # 手动绘制
+```
+
+- 用 Sprite + Group（统一更新+绘制）：
+
+```python
+class Block(pygame.sprite.Sprite):
+    def __init__(self, img, pos):
+        super().__init__()
+        self.image = img
+        self.rect = self.image.get_rect(topleft=pos)
+
+    def update(self):
+        self.rect.x += 2  # 统一由 group.update() 调用
+
+blocks = pygame.sprite.Group()
+blocks.add(Block(pygame.Surface((32, 32)), (100, 100)))
+
+blocks.update()      # 批量更新
+blocks.draw(screen)  # 批量绘制
+```
+
+选择原则：
+- 只需要简单碰撞/定位且对象很少 → 用 `Rect` 即可。
+- 需要批量绘制、统一更新、分层管理或大量对象 → 用 `Sprite` + `Group`。
+
+## 11. Map Editor 使用笔记
+
+基于 `mapeditor.py` 的 50×50 网格地图编辑器，方块大小 16px，保存到 `map.json`。
+
+### 启动
+
+```bash
+python mapeditor.py
+```
+
+### 操作
+
+| 操作 | 功能 |
+|------|------|
+| 左键（按住拖动） | 放置墙壁（值置为 1），同时自动保存 `map.json` |
+| 右键（按住拖动） | 删除墙壁（值置为 0），实时刷新，但不自动保存 |
+| S | 手动保存地图到 `map.json` |
+| C | 清空全部墙壁并重绘边界（调用 `draw_bound_wall`） |
+| ESC / 关闭窗口 | 退出并保存一次 |
+
+### 显示与网格
+- 画面尺寸 800×800，网格线用于定位；地图渲染使用 `assets/wall.png`。
+- `draw_map()` 逐格绘制值为 1 的单元。
+
+### 边界与清空
+- `draw_bound_wall()` 会把四周一圈设为墙，并立即绘制（在按 C 清空后调用）。
+- 默认加载已有 `map.json`；如文件缺失则使用全 0 地图。
+
+### 保存/加载要点
+- `save_map()` 使用 `json.dump` 覆盖写入；异常会打印“保存失败”。
+- 退出（QUIT 事件）前会自动保存一次；右键删除后若需持久化请按 S。
+
+### 与游戏联动
+- 运行 `main_desktop.py` 时会从同一 `map.json` 读取；编辑后无需额外配置即可生效。
