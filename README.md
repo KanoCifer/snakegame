@@ -9,7 +9,7 @@
 
 A classic Snake game developed with Python + Pygame, supporting both desktop and web (via pygbag).
 
-![Python](https://img.shields.io/badge/Python-3.10+-blue.svg)
+![Python](https://img.shields.io/badge/Python-3.14+-blue.svg)
 ![Pygame](https://img.shields.io/badge/Pygame-2.0+-green.svg)
 
 ### ✨ Features
