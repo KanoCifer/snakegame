@@ -21,6 +21,8 @@ A classic Snake game developed with Python + Pygame, supporting both desktop and
 - ❤️ Lives system
 - 🌐 Web support (via pygbag)
 - 🗺️ **Map Editor** - Create custom maps
+- 🍓 Huge Berry - Spawns every 10s, 2x2 size, length +3
+- ⚙️ Settings Button - Click on start screen to open map editor and return
 
 ### 📁 Project Structure
 
@@ -94,11 +96,10 @@ pygbag main.py
 
 ### 🎯 Game Rules
 
-1. Control the snake to eat food (berries)
-2. Each food eaten increases snake length by 1, score +1
-3. Hitting walls or yourself loses a life
-4. Game over when all lives are lost
-5. High score is automatically saved
+1. Control the snake to eat food (berries) — length +1
+2. Huge berry (spawns ~every 10s, 2x2) — length +3
+3. Hitting walls or yourself loses a life; lives reach 0 → game over
+4. High score saves automatically
 
 ### 📸 Screenshots
 
@@ -123,13 +124,15 @@ pygbag main.py
 - **Pygame** - Game Development Library
 - **pygbag** - Web Packaging Tool
 
-### �️ Map Editor
+### 🗺️ Map Editor
 
 Create custom maps with the built-in map editor:
 
 ```bash
 python mapeditor.py
 ```
+
+Shortcut: click the ⚙️ settings icon on the start screen to launch the editor; closing it returns to the game and reloads `map.json`.
 
 | Key | Action |
 |-----|--------|
@@ -142,6 +145,12 @@ python mapeditor.py
 Maps are saved to `map.json` and will be loaded automatically when you start the game.
 
 ### 📝 Changelog
+
+#### v1.2.0 (2025-12-28)
+- ✨ Huge berry added (2x2, length +3, spawns every 10s)
+- ✨ Start-screen settings button launches map editor and reloads map on exit
+- ✨ Start-screen tips now show controls and rules
+- 🐛 Fixed score inflation after length ≥12 (rate no longer mutates per call)
 
 #### v1.1.0 (2025-12-28)
 - ✨ Added Map Editor - Create and edit custom maps
@@ -178,6 +187,8 @@ Maps are saved to `map.json` and will be loaded automatically when you start the
 - ❤️ 生命值系统
 - 🌐 支持 Web 端运行（pygbag）
 - 🗺️ **地图编辑器** - 创建自定义地图
+- 🍓 巨型食物 - 每约 10 秒刷新一次，2x2 占位，长度 +3
+- ⚙️ 设置按钮 - 开始界面点击可打开地图编辑器，退出后返回游戏
 
 ### 📁 项目结构
 
@@ -251,11 +262,10 @@ pygbag main.py
 
 ### 🎯 游戏规则
 
-1. 控制蛇吃掉屏幕上的食物（浆果）
-2. 每吃一个食物，蛇身增长一节，得分 +1
-3. 撞到墙壁或自己的身体会失去生命
-4. 生命值耗尽时游戏结束
-5. 最高分会自动保存
+1. 吃普通食物：长度 +1
+2. 吃巨型食物（约每 10 秒刷新，2x2）：长度 +3
+3. 撞墙或撞自己：生命 -1；生命为 0 游戏结束
+4. 最高分自动保存
 
 ### 📸 游戏截图
 
@@ -280,13 +290,15 @@ pygbag main.py
 - **Pygame** - 游戏开发库
 - **pygbag** - Web 端打包工具
 
-### �️ 地图编辑器
+### 🗺️ 地图编辑器
 
 使用内置的地图编辑器创建自定义地图：
 
 ```bash
 python mapeditor.py
 ```
+
+快捷方式：在开始界面点击 ⚙️ 设置按钮即可启动编辑器，关闭后自动返回游戏并重新加载 `map.json`。
 
 | 按键 | 功能 |
 |------|------|
@@ -299,6 +311,12 @@ python mapeditor.py
 地图保存到 `map.json`，启动游戏时会自动加载。
 
 ### 📝 更新日志
+
+#### v1.2.0 (2025-12-28)
+- ✨ 新增巨型食物（2x2，占位，长度 +3，每 10 秒刷新一次）
+- ✨ 开始界面增加 ⚙️ 设置按钮，点击可打开地图编辑器并返回后自动加载新地图
+- ✨ 开始界面展示操作指南与规则
+- 🐛 修复长度 ≥12 后分数异常增长（倍率不再被反复累加）
 
 #### v1.1.0 (2025-12-28)
 - ✨ 新增地图编辑器 - 可创建和编辑自定义地图
