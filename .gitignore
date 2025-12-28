@@ -6,6 +6,6 @@
 .vscode/
 .idea/
 node_modules/
-*.log.DS_Store
+*.log
 __pycache__/
 .ipynb_checkpoints/
